@@ -3,7 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(optioins =>
+    {
+        optioins.SuppressModelStateInvalidFilter = true;
+    }) ;
 
 
 builder.Services.AddDbContext<ApiDbContext>(options =>
