@@ -1,4 +1,4 @@
-@ApiFuncional_HostAddress = http://localhost:5050
+@ApiFuncional_HostAddress = https://localhost:5050
 
 GET {{ApiFuncional_HostAddress}}/weatherforecast/
 Accept: application/json
