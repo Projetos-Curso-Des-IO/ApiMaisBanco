@@ -5,6 +5,6 @@
 		public string? Segredo { get; set; }
 		public int ExpiracaoHoras { get; set; }
 		public string? Emissor { get; set; }
-		public string? Audiencia { get; set; } //onde vai valer esse token/ App
+		public string? Audiencia { get; set; } //onde é valido esse token/ App
 	}
 }

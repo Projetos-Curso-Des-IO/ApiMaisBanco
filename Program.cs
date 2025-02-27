@@ -30,8 +30,10 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
 var JwtSettingSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(JwtSettingSection);
 
+
 var jwtSettings = JwtSettingSection.Get<JwtSettings>();
 var key = Encoding.ASCII.GetBytes(jwtSettings.Segredo);
+
 
 builder.Services.AddAuthentication(options =>
 {

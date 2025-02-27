@@ -89,7 +89,7 @@ namespace ApiFuncional.Controllers
 		[ProducesDefaultResponseType]
 		public async Task<ActionResult<Produto>> PutProduto(int id, Produto produto)
 		{
-			if (id != produto.Id) return BadRequest();
+			if (id != produto.Id) return BadRequest("Não encontrado.");
 
 			if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
