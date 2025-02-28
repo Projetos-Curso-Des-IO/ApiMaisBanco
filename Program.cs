@@ -39,7 +39,7 @@ var key = Encoding.ASCII.GetBytes(jwtSettings.Segredo);
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = true;
@@ -50,7 +50,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidAudience = jwtSettings.Audiencia,
-        ValidIssuer = jwtSettings.Emissor
+        ValidIssuer = jwtSettings.Emissor,
+        RoleClaimType = "role"
     };
 });
 

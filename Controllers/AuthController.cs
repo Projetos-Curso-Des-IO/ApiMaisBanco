@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using ApiFuncional.Model;
 using Microsoft.AspNetCore.Identity;
@@ -46,7 +47,7 @@ namespace ApiFuncional.Controllers
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, false);
-                return Ok(GerarJwt());
+                return Ok(GerarJwt(user.Email));
             }
 
             return ValidationProblem(ModelState);
@@ -63,20 +64,39 @@ namespace ApiFuncional.Controllers
 
             if (result.Succeeded) 
             {
-                return Ok(GerarJwt());
+                var token = await GerarJwt(loginUser.Email);
+                return Ok(token);                
             }
 
             return  Problem("Usário ou senha incorretas.");
         }
 
 
-        private string GerarJwt() 
+        private async Task<string> GerarJwt(string email)
         {
+            var user = await _userManager.FindByEmailAsync(email);
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
+
+            //Adicionar roles como clains
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            };
+
+
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_jwtSettings.Segredo);
 
             var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
             {
+
+                Subject = new ClaimsIdentity(claims),
                 Issuer = _jwtSettings.Emissor,
                 Audience = _jwtSettings.Audiencia,
                 Expires = DateTime.UtcNow.AddHours(_jwtSettings.ExpiracaoHoras),
@@ -84,8 +104,8 @@ namespace ApiFuncional.Controllers
             });
 
 
-            var encodedToken = tokenHandler.WriteToken(token);  
- 
+            var encodedToken = tokenHandler.WriteToken(token);
+
             return encodedToken;
         }
     }
