@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,9 +19,36 @@ builder.Services.AddControllers()
     }) ;
 
 
+
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Development", builder =>
+        builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+
+	options.AddPolicy("Production", builder =>
+		builder
+			.WithOrigins("https://localhost:9000")
+			.WithMethods("POST")
+			.AllowAnyHeader());
+});
+
+
+
+
+
+
 builder.Services.AddDbContext<ApiDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
+
+
+
+
 
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
@@ -36,11 +65,16 @@ var jwtSettings = JwtSettingSection.Get<JwtSettings>();
 var key = Encoding.ASCII.GetBytes(jwtSettings.Segredo);
 
 
+
+
+
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
+})
+.AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = true;
     options.SaveToken = true;
@@ -51,7 +85,7 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = jwtSettings.Audiencia,
         ValidIssuer = jwtSettings.Emissor,
-        RoleClaimType = "role"
+        RoleClaimType = ClaimTypes.Role
     };
 });
 
@@ -59,8 +93,11 @@ builder.Services.AddAuthentication(options =>
 
 
 
-
 builder.Services.AddEndpointsApiExplorer();
+
+
+
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -91,13 +128,23 @@ builder.Services.AddSwaggerGen(c =>
 
 
 
+
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors("Development");
 }
+else
+{
+    app.UseCors("Production");
+}
+
+
+
 
 app.UseHttpsRedirection();
 
