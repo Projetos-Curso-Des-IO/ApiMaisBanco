@@ -37,7 +37,7 @@ namespace ApiFuncional.Controllers
 
 
 
-
+		[AllowAnonymous]
 		[HttpGet("{id:int}")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]

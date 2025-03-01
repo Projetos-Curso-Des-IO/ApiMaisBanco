@@ -47,11 +47,12 @@ namespace ApiFuncional.Controllers
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, false);
-                return Ok(GerarJwt(user.Email));
+                var token = GerarJwt(user.Email);
+
+                return Ok(new { token.Result });
             }
 
-            return ValidationProblem(ModelState);
-            //return Problem("Falha ao registrar usuário.");
+            return ValidationProblem(ModelState);            
         }
 
 
@@ -85,8 +86,9 @@ namespace ApiFuncional.Controllers
             //Adicionar roles como clains
             foreach (var role in roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            };
+				claims.Add(new Claim(ClaimTypes.Role, role));
+				//claims.Add(new Claim("role", role));
+			};
 
 
 
@@ -95,7 +97,6 @@ namespace ApiFuncional.Controllers
 
             var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
             {
-
                 Subject = new ClaimsIdentity(claims),
                 Issuer = _jwtSettings.Emissor,
                 Audience = _jwtSettings.Audiencia,
