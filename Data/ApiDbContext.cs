@@ -6,9 +6,8 @@ namespace ApiFuncional.Data
 {
 	public class ApiDbContext : IdentityDbContext
 	{
-		public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options) 
-		{			
-		}
+		public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options) {}
 		public DbSet<Produto> Produtos { get; set; }
+		public DbSet<ClienteFornec> Clientes { get; set; }
 	}
 }
