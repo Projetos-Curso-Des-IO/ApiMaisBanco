@@ -32,9 +32,7 @@ namespace ApiFuncional.Controllers
 		}
 
 
-
-
-
+		
 
 
 		[AllowAnonymous]

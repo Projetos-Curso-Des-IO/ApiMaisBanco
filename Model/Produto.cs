@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ApiFuncional.Model
 {
@@ -12,6 +13,7 @@ namespace ApiFuncional.Model
 
 		[Required(ErrorMessage = "O campo {0} é obrigatório")]
 		[Range(0.01, int.MaxValue, ErrorMessage = "O preço deve ser maior que zero")]
+		[Column(TypeName = "decimal(18,2)")]
 		public decimal Preco { get; set; }
 
 		[Required(ErrorMessage = "O campo {0} é obrigatório")]
