@@ -13,13 +13,17 @@ namespace ApiFuncional.Controllers
     {
 
         private readonly ApiDbContext _context;
-		public ClientFornecController(ApiDbContext context)
+        private readonly Service.ClientesService service = new Service.ClientesService();
+        public ClientFornecController(ApiDbContext context)
 		{
             _context = context;
 		}
 
+        
 
-		[HttpGet]
+
+
+        [HttpGet]
 		[ProducesResponseType(typeof(ClienteFornec), StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
 		[ProducesDefaultResponseType]
@@ -39,50 +43,16 @@ namespace ApiFuncional.Controllers
 		[ProducesDefaultResponseType]
 		public async Task<ActionResult<ClienteFornec>> GetClienteCnpj(string cnpj)
 		{
-			string cnpjLimpo = cnpj.Replace(".", "").Replace("-", "").Replace("/", "");
-			var apiExterna = "https://www.receitaws.com.br/v1/cnpj/";
-			var url = $"{apiExterna}{cnpjLimpo}";
+			var _dadosDoclientes =  await service.BuscarDadosPorCnpjAsync(cnpj);
 
-			using (var httpClient = new HttpClient())
+			if (_dadosDoclientes != null)
 			{
-				HttpResponseMessage response = await httpClient.GetAsync(url);
-
-				if (response.IsSuccessStatusCode)
-				{
-					var jsonString = await response.Content.ReadAsStringAsync();
-
-					//Converto o json para objeto cliente
-					var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ClienteFornec>(jsonString, new System.Text.Json.JsonSerializerOptions
-					{
-						PropertyNameCaseInsensitive = true // Ignora diferença entre maiúsculas e minúsculas
-					});
-
-
-					if (apiResponse != null)
-					{
-						ClienteFornec clienteFornecedoresApi = new ClienteFornec
-						{
-							Cnpj = apiResponse.Cnpj,
-							Nome = apiResponse.Nome,
-							Fantasia = apiResponse.Fantasia,
-							Email = apiResponse.Email,
-							Telefone = apiResponse.Telefone,
-							Logradouro = apiResponse.Logradouro,
-							Bairro = apiResponse.Bairro,
-							Municipio = apiResponse.Municipio,
-							Uf = apiResponse.Uf,
-							Cep = apiResponse.Cep
-						};
-
-						return Ok(clienteFornecedoresApi);
-					}
-				}
-				else
-				{
-					return NotFound("CNPJ não encontrado na API externa.");
-				}
+				return Ok(_dadosDoclientes);
 			}
-			return NotFound("CNPJ não encontrado na API externa.");
+			else
+			{
+                return NotFound("CNPJ não encontrado na API externa.");
+            }
 		}
 
 	}
