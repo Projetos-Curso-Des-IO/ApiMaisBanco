@@ -1,8 +1,10 @@
 ﻿using ApiFuncional.Data;
+using ApiFuncional.Errors;
 using ApiFuncional.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Extensions;
 
 namespace ApiFuncional.Controllers
 {
@@ -12,27 +14,76 @@ namespace ApiFuncional.Controllers
     public class ClientFornecController : ControllerBase
     {
 
-        private readonly ApiDbContext _context;
-        private readonly Service.ClientesService service = new Service.ClientesService();
-        public ClientFornecController(ApiDbContext context)
+		private readonly ErrorsRespons _erros;
+		private readonly Service.ClientesService _service;
+
+		public ClientFornecController(ErrorsRespons errorsRespons, Service.ClientesService service)
 		{
-            _context = context;
+			_service = service;
+			_erros = errorsRespons;
 		}
 
-        
 
 
 
-        [HttpGet]
+		[HttpGet]
 		[ProducesResponseType(typeof(ClienteFornec), StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
 		[ProducesDefaultResponseType]
 		public async Task<ActionResult<IEnumerable<ClienteFornec>>> GetClientes()
         {
-			if (_context.Clientes == null) return NotFound("Cliente não encontrado com esse CNPJ");
+			try
+			{
+				var _listaDeClientes = await _service.ListarCliente();
+				if (_listaDeClientes != null && _listaDeClientes.Any())
+				{
+					return Ok(_listaDeClientes);
+				}
 
-			return await _context.Clientes.ToListAsync();
-        }
+				return NoContent();
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(StatusCodes.Status500InternalServerError, new
+				{
+					Mensagem = "Ocorreu um erro interno ao processar a requisição.",
+					Detalhes = ex.Message
+				});
+			}
+		}
+
+
+
+
+
+
+		[AllowAnonymous]
+		[HttpGet("{id:int}")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesDefaultResponseType]
+		public async Task<ActionResult<Produto>> GetCliente(int id)
+		{
+			try
+			{
+				var cliente = await _service.BuscarClienteById(id);
+				if (cliente == null)
+					return NotFound("Cliente não encontrado!");
+
+				return Ok(cliente);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(StatusCodes.Status500InternalServerError, new
+				{
+					Mensagem = "Ocorreu um erro interno ao processar a requisição.",
+					Detalhes = ex.Message
+				});
+			}
+		}
+
+
+
 
 
 
@@ -43,17 +94,65 @@ namespace ApiFuncional.Controllers
 		[ProducesDefaultResponseType]
 		public async Task<ActionResult<ClienteFornec>> GetClienteCnpj(string cnpj)
 		{
-			var _dadosDoclientes =  await service.BuscarDadosPorCnpjAsync(cnpj);
-
-			if (_dadosDoclientes != null)
+			try
 			{
-				return Ok(_dadosDoclientes);
+				var _dadosDoclientes = await _service.BuscarDadosPorCnpjAsync(cnpj);
+				if (_dadosDoclientes != null)
+				{
+					return Ok(_dadosDoclientes);
+				}
+				else
+				{
+					return NotFound("CNPJ não encontrado na API externa.");
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-                return NotFound("CNPJ não encontrado na API externa.");
-            }
+				return StatusCode(StatusCodes.Status500InternalServerError, new
+				{
+					Mensagem = "Ocorreu um erro interno ao processar a requisição.",
+					Detalhes = ex.Message
+				});
+			}
 		}
 
+
+
+
+		[HttpPost]
+		[ProducesResponseType(StatusCodes.Status201Created)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesDefaultResponseType]
+		public async Task<ActionResult<ClienteFornec>> PostCliente(ClienteFornec cliente)
+		{
+
+			try
+			{
+				var _errorsRespons = _erros.ValidarCliente(cliente);
+
+				if (_errorsRespons.Result is ObjectResult result &&
+					result?.StatusCode.HasValue == true &&
+					result.StatusCode != StatusCodes.Status200OK)
+				{
+					return BadRequest(result.Value);
+				}
+	
+				var _dadosDoCliente = await _service.CriarCliente(cliente);
+				if (_dadosDoCliente != null)
+				{
+					return Created("", cliente);
+				}
+
+				return Problem("Erro ao salvar o cliente no banco de dados!");
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(StatusCodes.Status500InternalServerError, new
+				{
+					Mensangem = "Erro interno identificado!",
+					Detalhes = ex.Message
+				});
+			}
+		}
 	}
 }

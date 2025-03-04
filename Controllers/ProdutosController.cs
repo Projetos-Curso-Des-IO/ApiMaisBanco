@@ -54,9 +54,6 @@ namespace ApiFuncional.Controllers
 
 
 
-
-
-
 		[HttpPost]
 		[ProducesResponseType(StatusCodes.Status201Created)]
 		[ProducesResponseType(StatusCodes.Status400BadRequest)]
