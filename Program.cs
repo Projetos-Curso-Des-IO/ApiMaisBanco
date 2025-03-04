@@ -1,5 +1,6 @@
 using ApiFuncional.Configuration;
 using ApiFuncional.Data;
+using ApiFuncional.Errors;
 using ApiFuncional.Model;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -19,11 +20,13 @@ builder.AddApiController()
 		.AddApiIdentity()
 		.AddApiAutenticacao();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddScoped<ApiFuncional.Service.ClientesService>();
+builder.Services.AddScoped<ErrorsRespons>();
+
 builder.AddApiSwagger();
 
 
 var app = builder.Build();
-//app.UseCors(app.Environment.IsDevelopment() ? "Development" : "Production");
 
 
 if (app.Environment.IsDevelopment())
